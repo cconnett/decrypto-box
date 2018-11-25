@@ -1,3 +1,4 @@
+#include <LowPower.h>
 #include <SevenSeg.h>
 
 char arr[4] = {'1', '2', '3', '4'};
@@ -34,7 +35,8 @@ void setup() {
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
-  Serial.begin(9600);
+  pinMode(10, INPUT_PULLUP);
+  // Serial.begin(9600);
   Serial.println("Gathering entropy");
   randomSeed(transitionSeed());
   Serial.println("Entropy gathered");
@@ -73,7 +75,7 @@ void changeNumber(int changeDelay, int attemptsPerDigit) {
       }
       // Display it for changeDelay milliseconds.
       disp.write(d);
-      Serial.println((char *)d);
+      Serial.println((char*)d);
       delay(changeDelay);
     }
     // One last thing: write the real value into the front digit.
@@ -81,12 +83,25 @@ void changeNumber(int changeDelay, int attemptsPerDigit) {
   }
 }
 
+void wakeUp() {}
+
 void loop() {
-  delay(200);
-  if (millis() - lastUpdate > 15000) {
-    lastUpdate = millis();
-    changeNumber(40, 20);
+  changeNumber(40, 20);
+
+  while (digitalRead(10) == HIGH) {
+    delay(50);
   }
+  Serial.println("Sleeping zzz");
+  delay(50);
+  disp.stopTimer();
+  pinMode(2, INPUT_PULLUP);
+  delay(50);
+  attachInterrupt(digitalPinToInterrupt(2), wakeUp, HIGH);
+  LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
+  detachInterrupt(digitalPinToInterrupt(2));
+  pinMode(2, OUTPUT);
+  disp.startTimer();
+  Serial.println("Wake!");
 }
 
 ISR(TIMER2_COMPA_vect) { disp.interruptAction(); }
