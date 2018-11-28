@@ -1,11 +1,11 @@
 #include <LowPower.h>
 #include <SevenSeg.h>
 
-char arr[4] = {'1', '2', '3', '4'};
 int digitPins[3] = {A2, A1, A0};
 SevenSeg disp(2, 3, 6, 5, 8, 4, 9);
+char arr[4] = {'1', '2', '3', '4'};
 char d[6] = "0.0.0";
-long lastUpdate = -15000;
+const char *blank = "   ";
 
 unsigned long transitionSeed() {
   unsigned long seed = 0;
@@ -75,7 +75,7 @@ void changeNumber(int changeDelay, int attemptsPerDigit) {
       }
       // Display it for changeDelay milliseconds.
       disp.write(d);
-      Serial.println((char*)d);
+      Serial.println((char *)d);
       delay(changeDelay);
     }
     // One last thing: write the real value into the front digit.
@@ -89,14 +89,16 @@ void loop() {
   changeNumber(40, 20);
 
   while (digitalRead(10) == HIGH) {
-    delay(50);
+    delay(5);
   }
   Serial.println("Sleeping zzz");
-  delay(50);
   disp.stopTimer();
+  delay(5);
+  digitalWrite(A2, LOW);
+  digitalWrite(A1, LOW);
+  digitalWrite(A0, LOW);
   pinMode(2, INPUT_PULLUP);
-  delay(50);
-  attachInterrupt(digitalPinToInterrupt(2), wakeUp, HIGH);
+  attachInterrupt(digitalPinToInterrupt(2), wakeUp, RISING);
   LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
   detachInterrupt(digitalPinToInterrupt(2));
   pinMode(2, OUTPUT);
